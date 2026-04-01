@@ -8,7 +8,7 @@ import (
 )
 
 // SetupRouter собирает все роуты приложения
-func SetupRouter(vacancyUC domain.VacancyUsecase) *gin.Engine {
+func SetupRouter(vacancyUC domain.VacancyUsecase, authUC domain.AuthUsecase) *gin.Engine {
 	r := gin.Default()
 
 	// Подключаем cors
@@ -22,6 +22,11 @@ func SetupRouter(vacancyUC domain.VacancyUsecase) *gin.Engine {
 	// api v1
 	v1 := r.Group("/api/v1")
 	{
+		// Регистрация роутов авторизации
+		authGroup := v1.Group("/auth")
+		RegisterAuthRoutes(authGroup, authUC)
+
+		// Роуты для вакансий
 		vacancyGroup := v1.Group("/vacancies")
 		RegisterVacancyRoutes(vacancyGroup, vacancyUC)
 

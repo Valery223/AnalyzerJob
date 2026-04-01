@@ -25,8 +25,13 @@ func main() {
 	// Бизнес-логика
 	vacancyUseCase := usecase.NewVacancyUsecase(vacancyRepo)
 
+	// Репозиторий для аутентификации
+	userRepo := postgresrep.NewUserRepository(dbPool)
+	// Бизнес-логика для аутентификации
+	authUseCase := usecase.NewAuthUsecase(userRepo)
+
 	// 3. Настройка Роутера
-	router := http.SetupRouter(vacancyUseCase)
+	router := http.SetupRouter(vacancyUseCase, authUseCase)
 
 	// 4. Запуск сервера
 	log.Println("Server is running on port 8080...")
