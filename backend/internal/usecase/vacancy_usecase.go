@@ -3,6 +3,11 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/Valery223/AnalyzerJob/backend/internal/domain"
@@ -45,22 +50,62 @@ func (u *vacancyUsecase) Delete(ctx context.Context, id string) error {
 	// TODO
 	return u.vacancyRepo.Delete(ctx, id)
 }
-
 func (u *vacancyUsecase) GenerateQuestions(ctx context.Context, id string) ([]string, error) {
-	// 1. Берем вакансию из БД по ID
+	//  Достаем вакансию из БД
 	vacancy, err := u.vacancyRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	// 2. Формируем промпт для ИИ
-	// prompt := "Выдели ключевые требования и составь 5 вопросов для собеседования по этой вакансии: " + vacancy.Description
+	//  Формируем промпт для ИИ
+	prompt := fmt.Sprintf("Ты IT-рекрутер. Напиши ровно 5 вопросов для технического собеседования по этой вакансии. Никаких вступлений, только сами вопросы, каждый с новой строки, без цифр и дефисов в начале. Вакансия: %s", vacancy.Description)
 
-	// 3. Обзращаемся API нейросети (поом сделаю)
-	// questions := callAIAPI(prompt)
-	questions := []string{"Вопрос 1", "Вопрос 2", "Вопрос 3"} // Заглушка
+	encodedPrompt := url.QueryEscape(prompt)
 
-	// 4. Обновляем вакансию в БД (сохраняем вопросы)
+	//API Pollinations
+	aiURL := "https://text.pollinations.ai/prompt/" + encodedPrompt + "?model=openai"
+
+	resp, err := http.Get(aiURL)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка сети при обращении к ИИ: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("ИИ вернул ошибку, статус: %d", resp.StatusCode)
+	}
+
+	// Читаем ответ
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка чтения ответа ИИ: %v", err)
+	}
+
+	aiResponseText := string(bodyBytes)
+
+	//Парсим ответ. ИИ вернет текст, где каждый вопрос с новой строки.
+	rawQuestions := strings.Split(aiResponseText, "\n")
+
+	var questions []string
+	for _, q := range rawQuestions {
+		cleaned := strings.TrimSpace(q)
+		cleaned = strings.TrimPrefix(cleaned, "-")
+		cleaned = strings.TrimPrefix(cleaned, "*")
+		cleaned = strings.TrimSpace(cleaned)
+
+		if len(cleaned) > 5 {
+			questions = append(questions, cleaned)
+		}
+	}
+
+	if len(questions) == 0 {
+		questions = []string{
+			"Расскажите о вашем релевантном опыте для этой позиции?",
+			"С какими сложностями вы сталкивались в похожих задачах?",
+		}
+	}
+
+	// Сохраняем
 	vacancy.AIQuestions = questions
 	err = u.vacancyRepo.Update(ctx, vacancy)
 
