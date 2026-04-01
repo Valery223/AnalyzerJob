@@ -83,7 +83,7 @@ func (u *vacancyUsecase) GenerateQuestions(ctx context.Context, id string) ([]st
 
 	aiResponseText := string(bodyBytes)
 
-	//Парсим ответ. ИИ вернет текст, где каждый вопрос с новой строки.
+	//Парсим ответ
 	rawQuestions := strings.Split(aiResponseText, "\n")
 
 	var questions []string

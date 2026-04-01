@@ -42,7 +42,7 @@ export default function NewAnalysisPage() {
       
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.message || 'Произошла ошибка при обработке. Проверьте консоль.');
+      setError(err.response?.data?.message || 'Произошла ошибка при обработке..');
       setIsLoading(false);
     }
   };
