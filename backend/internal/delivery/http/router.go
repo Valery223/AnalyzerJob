@@ -14,6 +14,9 @@ import (
 func SetupRouter(vacancyUC domain.VacancyUsecase, authUC domain.AuthUsecase) *gin.Engine {
 	r := gin.Default()
 
+	// Отключаем перенаправление trailing slash
+	// r.RedirectTrailingSlash = false
+
 	// Подключаем cors
 	r.Use(corsMiddleware())
 
