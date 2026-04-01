@@ -18,6 +18,16 @@ func RegisterAuthRoutes(r *gin.RouterGroup, uc domain.AuthUsecase) {
 	r.POST("/login", handler.Login)
 }
 
+// @Summary Регистрация пользователя
+// @Description Создает новый аккаунт пользователя с email и пароль
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body domain.AuthRequest true "Email и пароль (минимум 6 символов)"
+// @Success 201 {object} map[string]string "message"
+// @Failure 400 {object} map[string]string "error"
+// @Failure 500 {object} map[string]string "error"
+// @Router /api/v1/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req domain.AuthRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -33,6 +43,16 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User successfully registered!"})
 }
 
+// @Summary Вход в систему
+// @Description Аутентифицирует пользователя и возвращает JWT токен
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param input body domain.AuthRequest true "Email и пароль"
+// @Success 200 {object} map[string]string "token"
+// @Failure 400 {object} map[string]string "error"
+// @Failure 401 {object} map[string]string "error"
+// @Router /api/v1/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req domain.AuthRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

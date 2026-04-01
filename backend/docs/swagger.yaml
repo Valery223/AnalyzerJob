@@ -1,0 +1,267 @@
+definitions:
+  domain.AuthRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  domain.Vacancy:
+    properties:
+      ai_questions:
+        items:
+          type: string
+        type: array
+      company:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Аутентифицирует пользователя и возвращает JWT токен
+      parameters:
+      - description: Email и пароль
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/domain.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Вход в систему
+      tags:
+      - auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Создает новый аккаунт пользователя с email и пароль
+      parameters:
+      - description: Email и пароль (минимум 6 символов)
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/domain.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Регистрация пользователя
+      tags:
+      - auth
+  /api/v1/vacancies:
+    get:
+      description: Получает список вакансий текущего пользователя с опциональным поиском
+      parameters:
+      - description: JWT токен
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Поисковый запрос по названию или компании
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Vacancy'
+            type: array
+        "500":
+          description: error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить все вакансии пользователя
+      tags:
+      - vacancies
+    post:
+      consumes:
+      - application/json
+      description: Создает вакансию для текущего пользователя
+      parameters:
+      - description: JWT токен
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Данные вакансии
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Vacancy'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Vacancy'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать новую вакансию
+      tags:
+      - vacancies
+  /api/v1/vacancies/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет вакансию по идентификатору
+      parameters:
+      - description: JWT токен
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Идентификатор вакансии
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удалить вакансию
+      tags:
+      - vacancies
+    get:
+      description: Получает полную информацию о вакансии по идентификатору
+      parameters:
+      - description: JWT токен
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Идентификатор вакансии
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Vacancy'
+        "404":
+          description: error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить вакансию по ID
+      tags:
+      - vacancies
+  /api/v1/vacancies/{id}/generate:
+    post:
+      description: Использует AI для генерации вопросов на основе текста вакансии
+      parameters:
+      - description: JWT токен
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Идентификатор вакансии
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: questions
+          schema:
+            additionalProperties:
+              items:
+                type: string
+              type: array
+            type: object
+        "500":
+          description: error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Генерировать вопросы для вакансии
+      tags:
+      - vacancies
+swagger: "2.0"
