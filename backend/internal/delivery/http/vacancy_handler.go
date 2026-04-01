@@ -13,13 +13,13 @@ type VacancyHandler struct {
 }
 
 // RegisterRoutes привязывает хэндлеры к роутеру Gin
-func NewVacancyHandler(r *gin.RouterGroup, us domain.VacancyUsecase) {
-	handler := &VacancyHandler{
-		VacancyUC: us,
-	}
+func RegisterVacancyRoutes(r *gin.RouterGroup, uc domain.VacancyUsecase) {
+	handler := &VacancyHandler{VacancyUC: uc}
 
-	// Роуты для вакансий
 	r.POST("/", handler.Create)
+	r.GET("/", handler.Fetch)
+	r.GET("/:id", handler.GetByID)
+	r.DELETE("/:id", handler.Delete)
 }
 
 func (h *VacancyHandler) Create(c *gin.Context) {
@@ -27,7 +27,7 @@ func (h *VacancyHandler) Create(c *gin.Context) {
 
 	// Парсим json из запроса
 	if err := c.ShouldBindJSON(&vacancy); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error parse": err.Error()})
 		return
 	}
 
@@ -41,4 +41,51 @@ func (h *VacancyHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, vacancy)
+}
+
+func (h *VacancyHandler) GetByID(c *gin.Context) {
+	id := c.Param("id")
+
+	vacancy, err := h.VacancyUC.GetByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Vacancy not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, vacancy)
+}
+
+func (h *VacancyHandler) Fetch(c *gin.Context) {
+	// Достаем ?search= из URL
+	filter := domain.VacancyFilter{
+		SearchQuery: c.Query("search"),
+	}
+
+	// Хардкод
+	userID := "00000000-0000-0000-0000-000000000000"
+
+	vacancies, err := h.VacancyUC.Fetch(c.Request.Context(), userID, filter)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Если вакансий нет, отдаем пустой массив
+	if vacancies == nil {
+		vacancies = []*domain.Vacancy{}
+	}
+
+	c.JSON(http.StatusOK, vacancies)
+}
+
+func (h *VacancyHandler) Delete(c *gin.Context) {
+	id := c.Param("id")
+
+	err := h.VacancyUC.Delete(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
 }

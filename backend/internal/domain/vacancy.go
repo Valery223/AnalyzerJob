@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+// VacancyFilter - параметры для поиска
+type VacancyFilter struct {
+	SearchQuery string // Поиск по названию или компании
+}
+
 // Vacancy
 type Vacancy struct {
 	ID          string    `json:"id"`
@@ -19,11 +24,15 @@ type Vacancy struct {
 // VacancyUsecase - interface для  Usecase
 type VacancyUsecase interface {
 	Create(ctx context.Context, vacancy *Vacancy) error
-	// GetByID(ctx context.Context, id string) (*Vacancy, error)
+	GetByID(ctx context.Context, id string) (*Vacancy, error)
+	Fetch(ctx context.Context, userID string, filter VacancyFilter) ([]*Vacancy, error)
+	Delete(ctx context.Context, id string) error
 }
 
 // VacancyRepository  - interface для   БД
 type VacancyRepository interface {
 	Store(ctx context.Context, vacancy *Vacancy) error
-	// GetByID(ctx context.Context, id string) (*Vacancy, error)
+	GetByID(ctx context.Context, id string) (*Vacancy, error)
+	Fetch(ctx context.Context, userID string, filter VacancyFilter) ([]*Vacancy, error)
+	Delete(ctx context.Context, id string) error
 }

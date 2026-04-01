@@ -7,7 +7,6 @@ import (
 	"github.com/Valery223/AnalyzerJob/backend/internal/delivery/http"
 	postgresrep "github.com/Valery223/AnalyzerJob/backend/internal/repository/postgresRep"
 	"github.com/Valery223/AnalyzerJob/backend/internal/usecase"
-	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -23,16 +22,11 @@ func main() {
 	// 2. Инициализация слоев
 	// Репозиторий
 	vacancyRepo := postgresrep.NewVacancyRepository(dbPool)
-	// Юзкейс (Бизнес-логика)
+	// Бизнес-логика
 	vacancyUseCase := usecase.NewVacancyUsecase(vacancyRepo)
 
-	// 3. Настройка Gin
-	router := gin.Default()
-
-	v1 := router.Group("/api/v1")
-
-	vacancyGroup := v1.Group("/vacancies")
-	http.NewVacancyHandler(vacancyGroup, vacancyUseCase)
+	// 3. Настройка Роутера
+	router := http.SetupRouter(vacancyUseCase)
 
 	// 4. Запуск сервера
 	log.Println("Server is running on port 8080...")
