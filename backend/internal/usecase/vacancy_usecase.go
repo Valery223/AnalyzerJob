@@ -45,3 +45,24 @@ func (u *vacancyUsecase) Delete(ctx context.Context, id string) error {
 	// TODO
 	return u.vacancyRepo.Delete(ctx, id)
 }
+
+func (u *vacancyUsecase) GenerateQuestions(ctx context.Context, id string) ([]string, error) {
+	// 1. Берем вакансию из БД по ID
+	vacancy, err := u.vacancyRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Формируем промпт для ИИ
+	// prompt := "Выдели ключевые требования и составь 5 вопросов для собеседования по этой вакансии: " + vacancy.Description
+
+	// 3. Обзращаемся API нейросети (поом сделаю)
+	// questions := callAIAPI(prompt)
+	questions := []string{"Вопрос 1", "Вопрос 2", "Вопрос 3"} // Заглушка
+
+	// 4. Обновляем вакансию в БД (сохраняем вопросы)
+	vacancy.AIQuestions = questions
+	err = u.vacancyRepo.Update(ctx, vacancy)
+
+	return questions, err
+}

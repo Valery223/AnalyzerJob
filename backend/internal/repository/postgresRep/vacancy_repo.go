@@ -95,3 +95,9 @@ func (r *vacancyRepository) Delete(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+func (r *vacancyRepository) Update(ctx context.Context, v *domain.Vacancy) error {
+	query := `UPDATE vacancies SET ai_questions = $1 WHERE id = $2`
+	_, err := r.db.Exec(ctx, query, v.AIQuestions, v.ID)
+	return err
+}

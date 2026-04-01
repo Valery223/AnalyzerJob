@@ -28,6 +28,7 @@ func SetupRouter(vacancyUC domain.VacancyUsecase, authUC domain.AuthUsecase) *gi
 
 		// Роуты для вакансий
 		vacancyGroup := v1.Group("/vacancies")
+		vacancyGroup.Use(AuthMiddleware()) // Все роуты вакансий требуют авторизации
 		RegisterVacancyRoutes(vacancyGroup, vacancyUC)
 
 		// другие, типо auth будут

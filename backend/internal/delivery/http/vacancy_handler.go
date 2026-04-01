@@ -20,6 +20,7 @@ func RegisterVacancyRoutes(r *gin.RouterGroup, uc domain.VacancyUsecase) {
 	r.GET("/", handler.Fetch)
 	r.GET("/:id", handler.GetByID)
 	r.DELETE("/:id", handler.Delete)
+	r.POST("/:id/generate", handler.Generate)
 }
 
 func (h *VacancyHandler) Create(c *gin.Context) {
@@ -31,8 +32,9 @@ func (h *VacancyHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// (для теста)
-	vacancy.UserID = "00000000-0000-0000-0000-000000000000"
+	// Достаем user_id из контекста, который положил AuthMiddleware
+	userID := c.GetString("user_id")
+	vacancy.UserID = userID
 
 	err := h.VacancyUC.Create(c.Request.Context(), &vacancy)
 	if err != nil {
@@ -61,8 +63,7 @@ func (h *VacancyHandler) Fetch(c *gin.Context) {
 		SearchQuery: c.Query("search"),
 	}
 
-	// Хардкод
-	userID := "00000000-0000-0000-0000-000000000000"
+	userID := c.GetString("user_id")
 
 	vacancies, err := h.VacancyUC.Fetch(c.Request.Context(), userID, filter)
 	if err != nil {
@@ -88,4 +89,17 @@ func (h *VacancyHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "successfully deleted"})
+}
+
+func (h *VacancyHandler) Generate(c *gin.Context) {
+	id := c.Param("id")
+
+	// Вызываем логику генерации
+	questions, err := h.VacancyUC.GenerateQuestions(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate questions"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"questions": questions})
 }

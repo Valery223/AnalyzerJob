@@ -27,6 +27,7 @@ type VacancyUsecase interface {
 	GetByID(ctx context.Context, id string) (*Vacancy, error)
 	Fetch(ctx context.Context, userID string, filter VacancyFilter) ([]*Vacancy, error)
 	Delete(ctx context.Context, id string) error
+	GenerateQuestions(ctx context.Context, id string) ([]string, error)
 }
 
 // VacancyRepository  - interface для   БД
@@ -35,4 +36,5 @@ type VacancyRepository interface {
 	GetByID(ctx context.Context, id string) (*Vacancy, error)
 	Fetch(ctx context.Context, userID string, filter VacancyFilter) ([]*Vacancy, error)
 	Delete(ctx context.Context, id string) error
+	Update(ctx context.Context, vacancy *Vacancy) error
 }
